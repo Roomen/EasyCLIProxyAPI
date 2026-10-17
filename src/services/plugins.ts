@@ -344,3 +344,6 @@ export const pluginStoreApi = {
     };
   },
 };
+
+export const getPluginSupport = (): Promise<boolean> =>
+  invoke<boolean>('get_plugin_support');

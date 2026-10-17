@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { isTauri } from '@tauri-apps/api/core';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { isTauri, getCurrentWindow } from '../services/platform';
 import { Copy, Minus, Square, X } from 'lucide-react';
 import { useI18n } from '../i18n';
 import './WindowFrame.css';
