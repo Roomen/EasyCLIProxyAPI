@@ -150,6 +150,48 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('html').getAttribute('data-theme-id'), 'warm-sand-light');
     await page.keyboard.press('Escape');
 
+    await page.addInitScript(() => {
+      window.themeIds = [];
+      new MutationObserver(() => window.themeIds.push(document.documentElement.dataset.themeId))
+        .observe(document, { attributes: true, subtree: true, attributeFilter: ['data-theme-id'] });
+    });
+    selection = { version: 1, selectedId: 'harbor-dark' };
+    await open('platform=macos&custom'); await nativeReady(); await theme('dark');
+    assert.deepEqual([...new Set(await page.evaluate(() => window.themeIds))], ['harbor-dark'], 'custom themes load before the first theme is applied');
+    await openMenu();
+    assert.equal(await card('harbor-dark').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('.theme-selector-group[data-appearance="dark"] .theme-selector-card').last().getAttribute('data-theme-id'), 'harbor-dark');
+    assert.equal(await card('harbor-dark').innerText(), '港湾');
+    const customNotice = () => page.locator('.theme-selector-custom-notice');
+    for (const name of ['b-broken.json', 'c-duplicate.json', 'd-extra.json', 'e-large.json']) assert.match(await customNotice().innerText(), new RegExp(name.replace('.', '\\.')));
+    assert.doesNotMatch(await customNotice().innerText(), /a-harbor/);
+    assert.match(await customNotice().innerText(), /另有 3 个主题文件超出/);
+    await page.locator('[data-action="open-themes"]').click();
+    await page.waitForFunction(() => window.themeFixture.calls.some(call => call.cmd === 'open_custom_themes_directory'));
+    await page.evaluate(() => window.themeFixture.setCustomThemes([], true));
+    await page.locator('[data-action="reload-themes"]').click();
+    await page.waitForFunction(() => /无法读取自定义主题/.test(document.querySelector('.theme-selector-custom-notice')?.textContent ?? ''));
+    assert.equal(await card('harbor-dark').count(), 1, 'a failed reload keeps the loaded themes');
+    await page.evaluate(() => window.themeFixture.setCustomThemes([]));
+    await page.locator('[data-action="reload-themes"]').click();
+    await card('harbor-dark').waitFor({ state: 'detached' });
+    assert.equal(await customNotice().count(), 0);
+    assert.match(await trigger().getAttribute('aria-label'), /主题不可用/);
+    assert.equal(await page.locator('html').getAttribute('data-theme-id'), 'light');
+    await page.keyboard.press('Escape');
+    await open('platform=macos&open-error'); await nativeReady();
+    await openMenu();
+    await page.locator('[data-action="open-themes"]').click();
+    await page.waitForFunction(() => /无法打开主题目录/.test(document.querySelector('.theme-selector-custom-notice')?.textContent ?? ''));
+    await page.keyboard.press('Escape');
+    for (const locale of ['zh-CN', 'zh-TW', 'en', 'ja']) {
+      await open(`platform=windows&locale=${locale}`); await nativeReady();
+      await openMenu();
+      const clipped = await page.locator('.theme-selector-actions button').evaluateAll(buttons => buttons.filter(button => button.scrollWidth > button.clientWidth).map(button => button.textContent));
+      assert.deepEqual(clipped, [], `${locale}: custom theme actions must not be truncated`);
+      await page.keyboard.press('Escape');
+    }
+
     selection = null;
     for (const locale of ['zh-CN', 'zh-TW', 'en', 'ja']) for (const width of [1440, 1100, 900, 640]) {
       await page.setViewportSize({ width, height: 760 });

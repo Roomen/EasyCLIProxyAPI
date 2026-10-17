@@ -147,6 +147,39 @@ Codex 的 **会话管理 → 编辑上下文（实验性）** 仅在点击某个
 - 查看 Provider 配额和账号可用状态。
 - 通过 macOS 菜单栏或 Windows 系统托盘保持软件在后台运行。
 
+## 自定义主题
+
+每个主题一个 `.json` 文件，放在应用数据目录的 `themes` 文件夹中：Windows 和 Linux 为程序所在目录，macOS 应用为 `~/Library/Application Support/com.cpa.gui/themes`（不以 `.app` 方式运行时为程序所在目录）。主题菜单底部的 **打开主题目录** 会创建并打开该目录，**重新加载** 无需重启即可应用改动。自定义主题按文件名顺序排在内置主题之后。最多读取 64 个文件，单个文件不超过 64 KB；无效文件会被跳过，并在主题菜单中显示文件名及超出上限的文件数。
+
+```json
+{
+  "id": "harbor-dark",
+  "name": { "en": "Harbor", "zh-CN": "港湾", "ja": "ハーバー" },
+  "description": "Deep teal surfaces with a sea-glass accent",
+  "appearance": "dark",
+  "windowBackground": "#0E1A1F",
+  "tokens": {
+    "workspaceBackground": "#0E1A1F",
+    "surface": "#14242B",
+    "textPrimary": "#E6F1F2",
+    "border": "#2A434C",
+    "accent": "#6FD3C1",
+    "accentContrast": "#0E1A1F",
+    "sidebarBackground": "#0B151A"
+  }
+}
+```
+
+- `id`（必填）：小写字母、数字和 `-`，以字母开头；不能与内置主题（`light`, `dark`, `warm-sand-light`, `graphite-dark`, `midnight-dark`, `sakura-light`）或其他自定义主题重复。
+- `name`（必填）和 `description`：字符串，或以 `en`、`zh-CN`、`zh-TW`、`ja` 为键的对象。
+- `appearance`（必填）：`light` 或 `dark`，决定主题出现在哪个分组。
+- `windowBackground`（必填）：`#RRGGBB`，页面绘制前原生窗口显示的颜色。
+- `tokens`（必填，可为空对象）：颜色取值为 `#RRGGBB` 或 `#RRGGBBAA`，未填写的 token 使用默认亮色或暗色取值。
+- `backdrop`：可选的渐变背景，结构与内置的午夜蓝、樱语红粉主题相同。
+- 允许出现 `$schema`（会被忽略）；其他任何字段都会使文件无效。
+
+可用的 token 键：`workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`。
+
 ## 快速开始
 
 1. 前往 [GitHub Releases](https://github.com/router-for-me/EasyCLIProxyAPI/releases/latest)

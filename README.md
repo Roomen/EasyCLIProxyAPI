@@ -153,6 +153,39 @@ Manually renamed files without a session ID in their filename or a database path
 - Review provider quotas and account availability.
 - Keep the application available from the macOS menu bar or Windows system tray.
 
+## Custom Themes
+
+Put one theme per `.json` file in the `themes` folder of the application data directory: next to the executable on Windows and Linux, and `~/Library/Application Support/com.cpa.gui/themes` for the macOS app (next to the executable when run outside the `.app` bundle). The **Open themes folder** button at the bottom of the theme picker creates and opens it; **Reload** applies changes without restarting. Custom themes appear after the built-in themes in file name order. Up to 64 files of at most 64 KB each are read; an invalid file is skipped and its name is shown in the picker, along with the number of files beyond the limit.
+
+```json
+{
+  "id": "harbor-dark",
+  "name": { "en": "Harbor", "zh-CN": "港湾", "ja": "ハーバー" },
+  "description": "Deep teal surfaces with a sea-glass accent",
+  "appearance": "dark",
+  "windowBackground": "#0E1A1F",
+  "tokens": {
+    "workspaceBackground": "#0E1A1F",
+    "surface": "#14242B",
+    "textPrimary": "#E6F1F2",
+    "border": "#2A434C",
+    "accent": "#6FD3C1",
+    "accentContrast": "#0E1A1F",
+    "sidebarBackground": "#0B151A"
+  }
+}
+```
+
+- `id` (required): lowercase letters, digits and `-`, starting with a letter. It must not reuse a built-in ID (`light`, `dark`, `warm-sand-light`, `graphite-dark`, `midnight-dark`, `sakura-light`) or another custom theme's ID.
+- `name` (required) and `description`: a string or an object keyed by `en`, `zh-CN`, `zh-TW` and `ja`.
+- `appearance` (required): `light` or `dark`; the theme is listed in that group.
+- `windowBackground` (required): `#RRGGBB`, the native window color shown before the page paints.
+- `tokens` (required, may be empty): colors as `#RRGGBB` or `#RRGGBBAA`. Omitted tokens keep the default light or dark value.
+- `backdrop`: optional gradient background with the same structure as the built-in Midnight Blue and Sakura Blush themes.
+- `$schema` is allowed and ignored; any other field makes the file invalid.
+
+Available token keys: `workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`.
+
 ## Quick Start
 
 1. Download the package for your operating system from

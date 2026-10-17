@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Monitor, Moon, Sun, SunMoon } from 'lucide-react';
+import { Check, FolderOpen, Monitor, Moon, RefreshCw, Sun, SunMoon } from 'lucide-react';
 import { useI18n } from '../i18n';
 import {
-  retryThemeSave, setSystemTheme, useResolvedThemeId, useSystemThemes, useThemePreferenceIssue, useThemeRegistry,
+  openCustomThemesDirectory, reloadCustomThemes, retryThemeSave, setSystemTheme, useCustomThemeStatus,
+  useResolvedThemeId, useSystemThemes, useThemePreferenceIssue, useThemeRegistry,
 } from '../theme';
 import { themePreview, type ThemeRegistry } from '../themes/registry';
 import { localizeThemeLabel, type ThemeAppearance, type ThemeDefinition } from '../themes/types';
@@ -37,6 +38,8 @@ export function ThemeSelector({ value, onChange, open, onOpenChange, registry: o
   const issue = useThemePreferenceIssue();
   const systemThemes = useSystemThemes();
   const resolvedId = useResolvedThemeId();
+  const custom = useCustomThemeStatus();
+  const [openFailed, setOpenFailed] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<CSSProperties>();
@@ -56,6 +59,16 @@ export function ThemeSelector({ value, onChange, open, onOpenChange, registry: o
   const issueText = issue === 'read' ? t('app.theme.readFailed') : issue === 'save' ? t('app.theme.saveFailed')
     : unavailable ? t('app.theme.unavailableHint') : '';
   const label = `${t('app.theme.triggerHint')} — ${t('app.theme.current', { name })}`;
+  const customText = [
+    openFailed ? t('app.theme.custom.openFailed') : '',
+    custom.failed ? t('app.theme.custom.loadFailed') : '',
+    custom.skipped.length ? t('app.theme.custom.skipped', { files: custom.skipped.join(', ') }) : '',
+    custom.omitted ? t('app.theme.custom.omitted', { count: custom.omitted }) : '',
+  ].filter(Boolean).join(' ');
+  const openDirectory = () => {
+    setOpenFailed(false);
+    openCustomThemesDirectory().catch(() => setOpenFailed(true));
+  };
 
   useLayoutEffect(() => {
     if (!open) { setLayout(undefined); return; }
@@ -164,6 +177,16 @@ export function ThemeSelector({ value, onChange, open, onOpenChange, registry: o
               </div>
             );
           })}
+          {customText ? <div className="theme-selector-notice theme-selector-custom-notice" role="status">{customText}</div> : null}
+          <div className="theme-selector-actions">
+            <button type="button" data-action="open-themes" onClick={openDirectory}>
+              <FolderOpen size={13} aria-hidden="true" />{t('app.theme.custom.openFolder')}
+            </button>
+            <button type="button" data-action="reload-themes" disabled={custom.loading}
+              onClick={() => { setOpenFailed(false); void reloadCustomThemes(); }}>
+              <RefreshCw size={13} aria-hidden="true" />{t('app.theme.custom.reload')}
+            </button>
+          </div>
         </div>, document.body,
       ) : null}
     </div>

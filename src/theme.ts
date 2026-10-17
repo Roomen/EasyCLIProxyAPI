@@ -7,7 +7,8 @@ import { ThemePreferences } from './services/themePreferences';
 import { createThemeApplicator } from './themes/applyTheme';
 import { cacheFirstPaint, firstPaint } from './themes/firstPaint';
 import type { ThemeSelection } from './themes/types';
-import { themeRegistry, type ThemeRegistry } from './themes/registry';
+import { builtinThemes, createThemeRegistry, themeRegistry, type ThemeRegistry } from './themes/registry';
+import { parseCustomThemes, type CustomThemeList } from './themes/customThemes';
 
 export type { AppTheme, ThemePreference } from './themeController';
 
@@ -18,12 +19,52 @@ export function detectThemePreference(): ThemePreference {
   return preferences.get();
 }
 
+export type CustomThemeStatus = { loading: boolean; failed: boolean; skipped: readonly string[]; omitted: number };
+
+let customRegistry = themeRegistry;
+let customStatus: CustomThemeStatus = { loading: false, failed: false, skipped: [], omitted: 0 };
+let customLoads = 0;
+const customSubscribers = new Set<() => void>();
+
+function reportCustomThemes(next: CustomThemeStatus) {
+  customStatus = next;
+  customSubscribers.forEach((listener) => listener());
+}
+
+async function loadCustomThemes() {
+  const load = ++customLoads;
+  reportCustomThemes({ ...customStatus, loading: true });
+  try {
+    const { files, omitted } = await invoke<CustomThemeList>('list_custom_themes');
+    const { themes, skipped } = parseCustomThemes(files);
+    if (load !== customLoads) return;
+    customRegistry = createThemeRegistry([...builtinThemes, ...themes]);
+    controller?.setRegistry(customRegistry);
+    reportCustomThemes({ loading: false, failed: false, skipped, omitted });
+  } catch {
+    if (load === customLoads) reportCustomThemes({ ...customStatus, loading: false, failed: true });
+  }
+}
+
 export async function initializeThemePreferences(): Promise<void> {
   if (!isTauri()) return;
-  await preferences.initialize({
+  await Promise.all([preferences.initialize({
     load: () => invoke<ThemeSelection | null>('get_theme_selection'),
     save: (selection) => invoke('save_theme_selection', { selection }),
-  });
+  }), loadCustomThemes()]);
+}
+
+export const reloadCustomThemes = loadCustomThemes;
+
+export const openCustomThemesDirectory = () => invoke('open_custom_themes_directory');
+
+const subscribeCustomThemes = (listener: () => void) => {
+  customSubscribers.add(listener);
+  return () => { customSubscribers.delete(listener); };
+};
+
+export function useCustomThemeStatus() {
+  return useSyncExternalStore(subscribeCustomThemes, () => customStatus);
 }
 
 export function useThemePreferenceIssue() {
@@ -34,7 +75,7 @@ export const retryThemeSave = preferences.retry;
 
 let controller: ReturnType<typeof createThemeController> | undefined;
 
-export function initializeTheme(registry: ThemeRegistry = themeRegistry) {
+export function initializeTheme(registry: ThemeRegistry = customRegistry) {
   if (controller) return controller;
   const media = window.matchMedia?.('(prefers-color-scheme: dark)');
   controller = createThemeController({
