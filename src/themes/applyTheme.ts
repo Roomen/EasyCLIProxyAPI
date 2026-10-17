@@ -2,6 +2,9 @@ import { themeTokenProperties, type PlatformWindowMaterial, type ThemeDefinition
 import { backdropImage } from './backdrop';
 import { themeMaterialTokens, themeOverlayRules, themeOverlayPalette } from './materials';
 
+export const themeWindowMaterial = (theme: ThemeDefinition, platform: PlatformWindowMaterial | null) =>
+  theme.windowMaterial === 'translucent' ? platform : null;
+
 export function createThemeApplicator(document: Document, platformMaterial: () => PlatformWindowMaterial | null = () => null) {
   const ownedProperties = [...Object.values(themeTokenProperties).flat(),
     '--theme-backdrop-image', '--theme-backdrop-color', '--theme-backdrop-sidebar',
@@ -15,7 +18,7 @@ export function createThemeApplicator(document: Document, platformMaterial: () =
     root.dataset.theme = theme.appearance;
     root.dataset.themeId = theme.id;
     root.style.colorScheme = theme.appearance;
-    const material = theme.windowMaterial === 'translucent' ? platformMaterial() : null;
+    const material = themeWindowMaterial(theme, platformMaterial());
     if (material) root.dataset.windowMaterial = material;
     for (const [key, value] of Object.entries(themeMaterialTokens(theme))) {
       for (const property of themeTokenProperties[key as keyof typeof themeTokenProperties]) {

@@ -164,6 +164,7 @@ Codex の **セッション管理 → コンテキスト編集（実験的）** 
 - `windowBackground`（必須）：`#RRGGBB`。ページ描画前にネイティブウィンドウに表示される色です。
 - `tokens`（必須、空オブジェクト可）：色は `#RRGGBB` または `#RRGGBBAA`。省略した token は既定のライトまたはダークの値になります。
 - `backdrop`：任意のグラデーション背景。構造は組み込みのミッドナイトブルー、桜ピンクと同じです。
+- `windowMaterial`：`solid`（既定）または `translucent`。半透明テーマではサイドバーとワークスペースの背後にネイティブのウィンドウマテリアルが表示されます。macOS 26 以降は Liquid Glass、それ以前の macOS は vibrancy、Windows 11 は Mica、Windows 10 1809 以降は Acrylic です。Linux と古い Windows ではマテリアルがなく、不透明テーマとまったく同じ表示になるため、`windowBackground` とトークンは省略せずに指定してください。マテリアル表示中は `backdrop` は使われません。
 - `$schema` は記述可能で無視されます。それ以外のフィールドがあるとファイルは無効になります。
 
 利用できる token キー：`workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`。

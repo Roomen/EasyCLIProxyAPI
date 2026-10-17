@@ -176,6 +176,7 @@ Codex 的 **会话管理 → 编辑上下文（实验性）** 仅在点击某个
 - `windowBackground`（必填）：`#RRGGBB`，页面绘制前原生窗口显示的颜色。
 - `tokens`（必填，可为空对象）：颜色取值为 `#RRGGBB` 或 `#RRGGBBAA`，未填写的 token 使用默认亮色或暗色取值。
 - `backdrop`：可选的渐变背景，结构与内置的午夜蓝、樱语红粉主题相同。
+- `windowMaterial`：`solid`（默认）或 `translucent`。半透明主题会在侧边栏和工作区后面显示系统原生窗口材质：macOS 26 及以上为液态玻璃，更早的 macOS 为 vibrancy，Windows 11 为 Mica，Windows 10 1809 及以上为 Acrylic。Linux 和更早的 Windows 不支持材质，主题会按不透明主题原样显示，因此 `windowBackground` 和各项 token 仍需填写完整。显示材质时 `backdrop` 渐变不生效。
 - 允许出现 `$schema`（会被忽略）；其他任何字段都会使文件无效。
 
 可用的 token 键：`workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`。

@@ -662,6 +662,7 @@ dependencies = [
  "tokio-util",
  "toml 0.8.2",
  "toml_edit 0.20.2",
+ "window-vibrancy",
  "windows-sys 0.59.0",
  "yaml-edit",
  "yaml-serde-edit",

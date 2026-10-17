@@ -29,6 +29,8 @@ let customThemes = params.has('custom') ? [
   { fileName: 'c-duplicate.json', content: customTheme('dark', 'Shadow') },
   { fileName: 'd-extra.json', content: customTheme('extra-dark', 'Extra', { order: 1 }) },
   { fileName: 'e-large.json', content: null },
+] : params.has('glass') ? [
+  { fileName: 'glass.json', content: customTheme('glass-dark', 'Glass', { windowMaterial: 'translucent' }) },
 ] : [];
 const notify = (theme: AppTheme) => emit('tauri://theme-changed', theme);
 mockWindows('main');
@@ -50,6 +52,12 @@ mockIPC(async (cmd, args: any) => {
   }
   if (cmd === 'open_custom_themes_directory') {
     if (params.has('open-error')) throw new Error('No file manager');
+    return;
+  }
+  if (cmd === 'detect_window_material') return params.get('material');
+  if (cmd === 'set_window_material') {
+    await new Promise(resolve => setTimeout(resolve, Number(params.get('material-delay') ?? 0)));
+    if (params.has('material-error') && args.material) throw new Error('Material unavailable');
     return;
   }
   if (cmd === 'detect_core_platform') return { os: platform, arch: 'x86_64' };

@@ -184,6 +184,67 @@ const assert = require('node:assert/strict');
     await page.locator('[data-action="open-themes"]').click();
     await page.waitForFunction(() => /无法打开主题目录/.test(document.querySelector('.theme-selector-custom-notice')?.textContent ?? ''));
     await page.keyboard.press('Escape');
+
+    const nativeLog = () => page.evaluate(() => window.themeFixture.calls
+      .filter(call => call.cmd === 'set_window_material' || call.cmd.includes('background_color'))
+      .map(call => call.cmd === 'set_window_material' ? `material:${call.args.material}:${call.args.appearance}` : `paint:${call.args.value}`));
+    const alpha = selector => page.locator(selector).first().evaluate(element => {
+      const color = getComputedStyle(element).backgroundColor;
+      return color.startsWith('rgba') || color.includes('/') ? Number(color.match(/([\d.]+)\)$/)[1]) : 1;
+    });
+    for (const [platform, material] of [['windows', 'mica'], ['macos', 'liquid-glass']]) {
+      console.log(`Checking native window material: ${material}`);
+      selection = { version: 1, selectedId: 'glass-dark' };
+      await open(`platform=${platform}&glass&material=${material}`); await nativeReady(); await theme('dark');
+      await page.waitForFunction(material => document.documentElement.dataset.windowMaterial === material, material);
+      let log = await nativeLog();
+      assert.equal(log[0], `material:${material}:dark`, 'the material is applied before the page turns transparent');
+      assert.deepEqual([...new Set(log.filter(entry => entry.startsWith('paint:')))], ['paint:#00000000']);
+      assert.equal(await alpha('html'), 0);
+      assert.equal(await alpha('body'), 0);
+      assert.ok(await alpha('.sidebar') < 1 && await alpha('.workspace') < 1);
+      const applied = log.length;
+      await select('dark'); await saved('dark');
+      await page.waitForFunction(() => document.documentElement.dataset.windowMaterial === undefined);
+      await page.waitForFunction(() => window.themeFixture.calls.some(call => call.cmd === 'set_window_material' && call.args.material === null));
+      log = (await nativeLog()).slice(applied);
+      const cleared = log.indexOf('material:null:dark');
+      assert.ok(cleared > 0 && log.slice(0, cleared).some(entry => entry.startsWith('paint:#') && entry !== 'paint:#00000000'), 'the window is painted opaque before the material is cleared');
+      assert.ok(!log.includes('paint:#00000000'));
+      assert.equal(await alpha('html'), 1);
+      assert.equal(await alpha('.sidebar'), 1);
+    }
+    console.log('Checking failed window material');
+    selection = { version: 1, selectedId: 'glass-dark' };
+    await open('platform=windows&glass&material=mica&material-error'); await nativeReady(); await theme('dark');
+    await page.waitForFunction(() => window.themeFixture.calls.some(call => call.cmd === 'set_window_material'));
+    await page.waitForFunction(() => document.documentElement.dataset.windowMaterial === undefined);
+    await page.waitForFunction(() => window.themeFixture.calls.some(call => call.cmd.includes('background_color')
+      && call.args.value === '#0E1A1F'));
+    assert.ok(!(await nativeLog()).includes('paint:#00000000'), 'a failed material never turns the window transparent');
+    assert.equal(await alpha('html'), 1);
+    assert.equal(await alpha('.sidebar'), 1);
+    selection = { version: 1, selectedId: 'glass-dark' };
+    await open('platform=windows&glass&material=mica&material-error&material-delay=2000'); await theme('dark');
+    await page.waitForFunction(() => window.themeFixture.calls.some(call => call.cmd === 'set_window_material'));
+    await select('dark'); await saved('dark');
+    await page.waitForFunction(() => window.themeFixture.calls.some(call => call.cmd.includes('background_color')));
+    await page.waitForTimeout(500);
+    assert.equal(await page.locator('html').getAttribute('data-theme-id'), 'dark', 'a late material failure keeps the newer selection');
+    assert.equal(await page.locator('html').getAttribute('data-window-material'), null);
+    assert.ok(!(await nativeLog()).includes('paint:#00000000'));
+    for (const platform of ['linux', 'macos']) {
+      console.log(`Checking unsupported window material: ${platform}`);
+      selection = { version: 1, selectedId: 'glass-dark' };
+      await open(`platform=${platform}&glass`); await nativeReady(); await theme('dark');
+      await page.waitForFunction(() => document.documentElement.dataset.themeId === 'glass-dark');
+      assert.equal(await page.locator('html').getAttribute('data-window-material'), null);
+      const log = await nativeLog();
+      assert.ok(log.length > 0 && log.every(entry => entry === 'paint:#0E1A1F'), 'unsupported systems keep the solid window');
+      assert.equal(await alpha('html'), 1);
+      assert.equal(await alpha('.sidebar'), 1);
+    }
+    selection = null;
     for (const locale of ['zh-CN', 'zh-TW', 'en', 'ja']) {
       await open(`platform=windows&locale=${locale}`); await nativeReady();
       await openMenu();

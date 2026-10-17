@@ -24,6 +24,15 @@ describe('custom themes', () => {
     expect(registry.themes.slice(-2).map(({ id }) => id)).toEqual(['harbor-dark', 'paper-light']);
   });
 
+  test('accepts a window material request', () => {
+    const { themes, skipped } = parseCustomThemes([
+      file('glass.json', theme({ id: 'glass-dark', windowMaterial: 'translucent' })),
+      file('solid.json', theme({ id: 'solid-dark', windowMaterial: 'solid' })),
+    ]);
+    expect(skipped).toEqual([]);
+    expect(themes.map(({ windowMaterial }) => windowMaterial)).toEqual(['translucent', 'solid']);
+  });
+
   test('skips only the invalid file and records its name', () => {
     const { themes, skipped } = parseCustomThemes([
       file('broken.json', '{'),
@@ -33,7 +42,7 @@ describe('custom themes', () => {
       file('builtin.json', theme({ id: 'dark' })),
       file('extra.json', theme({ id: 'extra-dark', order: 1 })),
       file('key.json', theme({ id: 'key-dark', nameKey: 'app.theme.dark' })),
-      file('material.json', theme({ id: 'glass-dark', windowMaterial: 'translucent' })),
+      file('material.json', theme({ id: 'glass-dark', windowMaterial: 'glass' })),
       file('token.json', theme({ id: 'token-dark', tokens: { unknownToken: '#ffffff' } })),
       file('token-type.json', theme({ id: 'token-type-dark', tokens: { accent: ['#ffffff'] } })),
       file('background.json', theme({ id: 'background-dark', windowBackground: ['#ffffff'] })),

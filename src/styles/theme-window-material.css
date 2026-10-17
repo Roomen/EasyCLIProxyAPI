@@ -1,0 +1,12 @@
+:root[data-window-material],
+:root[data-window-material] :is(body, #root, .immersive-window, .app-shell) {
+  background: transparent !important;
+}
+
+:root[data-window-material] :is(.workspace, .immersive-window .window-titlebar) {
+  background: color-mix(in srgb, var(--theme-faf9f5) 72%, transparent);
+}
+
+:root[data-window-material] .sidebar {
+  background: color-mix(in srgb, var(--sidebar-bg) 40%, transparent);
+}

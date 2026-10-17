@@ -4,16 +4,17 @@ import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { createThemeController, type AppTheme, type ThemePreference } from './themeController';
 import { ThemePreferences } from './services/themePreferences';
-import { createThemeApplicator } from './themes/applyTheme';
+import { createThemeApplicator, themeWindowMaterial } from './themes/applyTheme';
 import { cacheFirstPaint, firstPaint } from './themes/firstPaint';
-import type { ThemeSelection } from './themes/types';
+import type { PlatformWindowMaterial, ThemeSelection } from './themes/types';
 import { builtinThemes, createThemeRegistry, themeRegistry, type ThemeRegistry } from './themes/registry';
 import { parseCustomThemes, type CustomThemeList } from './themes/customThemes';
 
 export type { AppTheme, ThemePreference } from './themeController';
 
 const preferences = new ThemePreferences();
-const applyTheme = createThemeApplicator(document);
+let platformMaterial: PlatformWindowMaterial | null = null;
+const applyTheme = createThemeApplicator(document, () => platformMaterial);
 
 export function detectThemePreference(): ThemePreference {
   return preferences.get();
@@ -46,12 +47,16 @@ async function loadCustomThemes() {
   }
 }
 
+async function detectWindowMaterial() {
+  platformMaterial = await invoke<PlatformWindowMaterial | null>('detect_window_material').catch(() => null);
+}
+
 export async function initializeThemePreferences(): Promise<void> {
   if (!isTauri()) return;
   await Promise.all([preferences.initialize({
     load: () => invoke<ThemeSelection | null>('get_theme_selection'),
     save: (selection) => invoke('save_theme_selection', { selection }),
-  }), loadCustomThemes()]);
+  }), loadCustomThemes(), detectWindowMaterial()]);
 }
 
 export const reloadCustomThemes = loadCustomThemes;
@@ -121,11 +126,25 @@ export function initializeTheme(registry: ThemeRegistry = customRegistry) {
           : currentWindow.theme(),
         listen: (listener) => currentWindow.onThemeChanged(({ payload }) => listener(payload)),
         async setBackground(_appearance, definition) {
-          const background = definition.windowBackground;
-          await Promise.allSettled([
+          const material = themeWindowMaterial(definition, platformMaterial);
+          const paint = (background: string) => Promise.allSettled([
             currentWindow.setBackgroundColor(background),
             currentWebview.setBackgroundColor(background),
           ]);
+          if (!platformMaterial) {
+            await paint(definition.windowBackground);
+            return;
+          }
+          const switchMaterial = () => invoke('set_window_material', { material, appearance: definition.appearance });
+          if (!material) {
+            await paint(definition.windowBackground);
+            await switchMaterial();
+          } else if (await switchMaterial().then(() => true, () => false)) {
+            await paint('#00000000');
+          } else {
+            platformMaterial = null;
+            controller?.setRegistry(controller.getRegistry());
+          }
         },
       };
     },

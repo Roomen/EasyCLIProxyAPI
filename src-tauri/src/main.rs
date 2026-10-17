@@ -34,6 +34,7 @@ mod provider_health;
 ))]
 mod tray;
 mod usage;
+mod window_material;
 #[cfg(target_os = "windows")]
 mod windows_frame;
 
@@ -2570,10 +2571,13 @@ fn main() {
             // (src/components/WindowFrame.tsx) uses the same platform condition synchronously.
             // This stays a runtime call because tauri.windows.conf.json would replace the whole
             // `app.windows` array (JSON Merge Patch) and duplicate the main window config.
-            #[cfg(target_os = "windows")]
             if let Some(window) = app.get_webview_window("main") {
-                windows_frame::install(&window)?;
-                window.set_decorations(false)?;
+                window.set_background_color(Some(tauri::window::Color(255, 255, 255, 255)))?;
+                #[cfg(target_os = "windows")]
+                {
+                    windows_frame::install(&window)?;
+                    window.set_decorations(false)?;
+                }
             }
             if let Err(error) = network_proxy::refresh(app.state::<GuiConfigState>().inner()) {
                 eprintln!("Failed to read startup proxy settings: {error}");
@@ -2711,6 +2715,8 @@ fn main() {
             desktop_theme::open_custom_themes_directory,
             desktop_theme::get_theme_selection,
             desktop_theme::save_theme_selection,
+            window_material::detect_window_material,
+            window_material::set_window_material,
             privacy_mode::get_privacy_mode,
             privacy_mode::save_privacy_mode,
             health_check,

@@ -1001,6 +1001,7 @@ export function createBrowserMockRuntime(
       case 'save_usage_events_export': return null;
       case 'detect_core_platform': return { os: 'windows', arch: 'x86_64', assetOs: 'windows', assetArch: 'amd64', archiveKind: 'zip' };
       case 'get_linux_system_theme': return 'light';
+      case 'detect_window_material': return null;
       case 'list_custom_themes': return { files: [{ fileName: 'harbor-dark.json', content: JSON.stringify(MOCK_CUSTOM_THEME) }], omitted: 0 };
       case 'set_app_locale':
       case 'open_external_url':
@@ -1009,6 +1010,7 @@ export function createBrowserMockRuntime(
       case 'open_auth_files_directory':
       case 'open_core_logs_directory':
       case 'open_custom_themes_directory':
+      case 'set_window_material':
       case 'restart_agent_app':
       case 'restart_codex_app':
       case 'restart_opencode_app':

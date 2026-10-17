@@ -5,7 +5,7 @@ export type CustomThemeFile = { fileName: string; content: string | null };
 export type CustomThemeList = { files: CustomThemeFile[]; omitted: number };
 export type CustomThemes = { themes: ThemeDefinition[]; skipped: string[] };
 
-const allowedKeys = new Set(['$schema', 'id', 'name', 'description', 'appearance', 'windowBackground', 'tokens', 'backdrop']);
+const allowedKeys = new Set(['$schema', 'id', 'name', 'description', 'appearance', 'windowBackground', 'windowMaterial', 'tokens', 'backdrop']);
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);
 
