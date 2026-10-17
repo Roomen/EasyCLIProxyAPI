@@ -65,7 +65,7 @@ export function initializeTheme(registry: ThemeRegistry = themeRegistry) {
     applyTheme(_appearance, definition) {
       applyTheme(definition);
       cacheFirstPaint(() => window.localStorage,
-        firstPaint(registry, preferences.get(), preferences.getSystemThemes(), definition));
+        firstPaint(controller?.getRegistry() ?? registry, preferences.get(), preferences.getSystemThemes(), definition));
     },
     async connectNative() {
       if (!isTauri()) return null;
@@ -106,6 +106,11 @@ export function useSystemThemes() {
 export function useResolvedThemeId() {
   const themeController = initializeTheme();
   return useSyncExternalStore(themeController.subscribe, themeController.getResolvedThemeId);
+}
+
+export function useThemeRegistry() {
+  const themeController = initializeTheme();
+  return useSyncExternalStore(themeController.subscribe, themeController.getRegistry);
 }
 
 export function setSystemTheme(id: string) {

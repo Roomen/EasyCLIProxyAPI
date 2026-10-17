@@ -2,9 +2,11 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { createPortal } from 'react-dom';
 import { Check, Monitor, Moon, Sun, SunMoon } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { retryThemeSave, setSystemTheme, useResolvedThemeId, useSystemThemes, useThemePreferenceIssue } from '../theme';
-import { themePreview, themeRegistry, type ThemeRegistry } from '../themes/registry';
-import type { ThemeAppearance, ThemeDefinition } from '../themes/types';
+import {
+  retryThemeSave, setSystemTheme, useResolvedThemeId, useSystemThemes, useThemePreferenceIssue, useThemeRegistry,
+} from '../theme';
+import { themePreview, type ThemeRegistry } from '../themes/registry';
+import { localizeThemeLabel, type ThemeAppearance, type ThemeDefinition } from '../themes/types';
 import './ThemeSelector.css';
 
 function ThemeThumbnail({ theme }: { theme: ThemeDefinition }) {
@@ -22,14 +24,16 @@ function ThemeThumbnail({ theme }: { theme: ThemeDefinition }) {
 
 type Mode = ThemeAppearance | 'system';
 
-export function ThemeSelector({ value, onChange, open, onOpenChange, registry = themeRegistry }: {
+export function ThemeSelector({ value, onChange, open, onOpenChange, registry: override }: {
   value: string;
   onChange: (id: string) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   registry?: ThemeRegistry;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const activeRegistry = useThemeRegistry();
+  const registry = override ?? activeRegistry;
   const issue = useThemePreferenceIssue();
   const systemThemes = useSystemThemes();
   const resolvedId = useResolvedThemeId();
@@ -42,7 +46,13 @@ export function ThemeSelector({ value, onChange, open, onOpenChange, registry = 
   const slot = (appearance: ThemeAppearance) =>
     fixed?.appearance === appearance ? fixed.id : registry.resolveSystem(appearance, systemThemes).id;
   const current = registry.get(resolvedId) ?? registry.get('light')!;
-  const name = unavailable ? t('app.theme.unavailable') : t(current.nameKey);
+  const themeName = (theme: ThemeDefinition) => theme.name ? localizeThemeLabel(theme.name, locale) : t(theme.nameKey!);
+  const themeTitle = (theme: ThemeDefinition) => {
+    const description = theme.description ? localizeThemeLabel(theme.description, locale)
+      : theme.descriptionKey ? t(theme.descriptionKey) : '';
+    return description ? `${themeName(theme)}\n${description}` : themeName(theme);
+  };
+  const name = unavailable ? t('app.theme.unavailable') : themeName(current);
   const issueText = issue === 'read' ? t('app.theme.readFailed') : issue === 'save' ? t('app.theme.saveFailed')
     : unavailable ? t('app.theme.unavailableHint') : '';
   const label = `${t('app.theme.triggerHint')} — ${t('app.theme.current', { name })}`;
@@ -142,11 +152,11 @@ export function ThemeSelector({ value, onChange, open, onOpenChange, registry = 
                 <div className="theme-selector-grid">
                   {registry.themes.filter((theme) => theme.appearance === appearance).map((theme) => (
                     <button key={theme.id} type="button" data-theme-id={theme.id} aria-pressed={chosen === theme.id}
-                      title={theme.descriptionKey ? `${t(theme.nameKey)}\n${t(theme.descriptionKey)}` : t(theme.nameKey)}
+                      title={themeTitle(theme)}
                       className={`theme-selector-card${chosen === theme.id ? ' selected' : ''}`}
                       onClick={() => chooseTheme(theme)}>
                       <ThemeThumbnail theme={theme} />
-                      <span className="theme-selector-name">{t(theme.nameKey)}</span>
+                      <span className="theme-selector-name">{themeName(theme)}</span>
                       {chosen === theme.id ? <Check className="theme-selector-check" size={12} aria-hidden="true" /> : null}
                     </button>
                   ))}
