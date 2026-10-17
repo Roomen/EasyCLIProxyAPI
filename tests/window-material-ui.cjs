@@ -25,7 +25,7 @@ const base = process.env.THEME_TEST_URL || 'http://127.0.0.1:1422';
       await page.evaluate(async () => Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
     };
     for (appearance of ['light', 'dark']) for (const [platform, material] of [['macos', 'liquid-glass'], ['macos', 'vibrancy'], ['windows', 'mica'], ['windows', 'acrylic'], ['linux', null], ['windows', null], ['macos', null]]) {
-      await page.goto(`${base}/tests/fixtures/theme.html?platform=${platform}&glass&windowPreview=windows${material ? `&material=${material}` : ''}`);
+      await page.goto(`${base}/tests/fixtures/theme.html?platform=${platform}&glass&windowPreview=${platform === 'macos' ? 'macos' : 'windows'}${material ? `&material=${material}` : ''}`);
       await page.waitForFunction(() => document.documentElement.dataset.themeId === 'glass-dark' && document.querySelector('.workspace'));
       await reload({});
       assert.deepEqual(await opacities(), material ? [0.72, 0.4, 0.72] : [1, 1, 1]);

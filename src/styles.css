@@ -488,7 +488,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Shared with the Windows titlebar in components/WindowFrame.css, which lives outside .app-shell. */
+/* Shared with the window titlebar in components/WindowFrame.css, which lives outside .app-shell. */
 :root {
   --app-sidebar-width: 264px;
 }

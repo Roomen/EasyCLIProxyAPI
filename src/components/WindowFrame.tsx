@@ -4,29 +4,36 @@ import { Copy, Minus, Square, X } from 'lucide-react';
 import { useI18n } from '../i18n';
 import './WindowFrame.css';
 
+type WindowShell = 'windows' | 'macos';
+
 // The browser preview is explicitly opt-in and never affects production builds.
-const preview = import.meta.env.DEV
-  && new URLSearchParams(window.location.search).get('windowPreview') === 'windows';
+const previewParam = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('windowPreview') : null;
+const preview: WindowShell | null = previewParam === 'windows' || previewParam === 'macos' ? previewParam : null;
 
 /**
  * Must agree with the `#[cfg(target_os = "windows")]` branch in `main.rs` that removes the native
- * decorations. The check is synchronous and cannot fail, so the window never ends up without any
- * controls, and the titlebar is present on the first render (no layout shift). WebView2 always
- * reports "Windows NT" in its user agent.
+ * decorations, and with the macOS-only `titleBarStyle: "Overlay"` in `tauri.conf.json`. The check is
+ * synchronous and cannot fail, so the window never ends up without any controls, and the titlebar is
+ * present on the first render (no layout shift). WebView2 always reports "Windows NT" and WKWebView
+ * "Macintosh" in its user agent.
  */
-function isNativeWindowsShell() {
-  return isTauri() && !document.body.dataset.browserMock && /\bWindows NT\b/.test(navigator.userAgent);
+function nativeWindowShell(): WindowShell | null {
+  if (!isTauri() || document.body.dataset.browserMock) return null;
+  if (/\bWindows NT\b/.test(navigator.userAgent)) return 'windows';
+  if (/\bMacintosh\b/.test(navigator.userAgent)) return 'macos';
+  return null;
 }
 
 export function WindowFrame({ children }: { children: ReactNode }) {
   const { t } = useI18n();
-  const [enabled] = useState(() => preview || isNativeWindowsShell());
+  const [shell] = useState(() => preview ?? nativeWindowShell());
+  const controls = shell === 'windows';
   const [maximized, setMaximized] = useState(false);
   const [focused, setFocused] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!enabled || preview) return;
+    if (!controls || preview) return;
     const appWindow = getCurrentWindow();
     let disposed = false;
     const unlisteners: Array<() => void> = [];
@@ -58,7 +65,7 @@ export function WindowFrame({ children }: { children: ReactNode }) {
       cancelAnimationFrame(frame);
       unlisteners.forEach(unlisten => unlisten());
     };
-  }, [enabled]);
+  }, [controls]);
 
   const act = async (action: 'minimize' | 'toggleMaximize' | 'close') => {
     setError(false);
@@ -74,15 +81,17 @@ export function WindowFrame({ children }: { children: ReactNode }) {
     } catch { setError(true); }
   };
 
-  if (!enabled) return <>{children}</>;
+  if (!shell) return <>{children}</>;
   const maximizeLabel = t(maximized ? 'app.window.restore' : 'app.window.maximize');
+  const dragRegion = !preview ? true : undefined;
   return (
-    <div className="immersive-window" data-focused={focused}>
+    <div className="immersive-window" data-shell={shell} data-focused={focused}>
       <header className="window-titlebar">
-        <div className="window-drag-region" data-tauri-drag-region={!preview ? true : undefined}
-          onDoubleClick={preview ? () => void act('toggleMaximize') : undefined} />
+        <div className="window-drag-region" data-tauri-drag-region={dragRegion}
+          onDoubleClick={preview === 'windows' ? () => void act('toggleMaximize') : undefined} />
+        {shell === 'macos' ? <span className="window-title">EasyCLIProxyAPI</span> : null}
         {error ? <span className="window-error" role="alert">{t('app.window.error')}</span> : null}
-        <div className="window-controls">
+        {controls ? <div className="window-controls">
           <button type="button" aria-label={t('app.window.minimize')} title={t('app.window.minimize')}
             onClick={() => void act('minimize')}><Minus aria-hidden="true" size={14} /></button>
           <button type="button" aria-label={maximizeLabel} title={maximizeLabel}
@@ -91,7 +100,7 @@ export function WindowFrame({ children }: { children: ReactNode }) {
           </button>
           <button type="button" className="window-close" aria-label={t('app.window.close')} title={t('app.window.close')}
             onClick={() => void act('close')}><X aria-hidden="true" size={16} /></button>
-        </div>
+        </div> : null}
       </header>
       <div className="window-content">{children}</div>
     </div>

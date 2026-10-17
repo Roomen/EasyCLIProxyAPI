@@ -82,6 +82,12 @@ const coversCenterOf = (locator) => locator.evaluate(el => {
     await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
     await page.screenshot({ path: 'bin-work/windows-immersive-dark.png' });
 
+    await page.setViewportSize({ width: 640, height: 600 });
+    const compactTitlebar = await page.locator('.window-titlebar').boundingBox();
+    assert.deepEqual([compactTitlebar.x, compactTitlebar.y, compactTitlebar.width], [0, 0, 640], 'compact titlebar spans the window');
+    assert.equal(await page.locator('.window-titlebar').evaluate(el => getComputedStyle(el).backgroundColor),
+      await page.locator('.sidebar').evaluate(el => getComputedStyle(el).backgroundColor), 'compact titlebar matches the sidebar');
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.locator('.sidebar-easy-entry').click();
     await page.locator('.app-shell-easy-mode').waitFor();
     assert.equal(await page.locator('.window-titlebar').count(), 1, 'easy mode keeps controls');
@@ -135,13 +141,53 @@ const coversCenterOf = (locator) => locator.evaluate(el => {
     assert.equal(await coversCenterOf(native.locator('.window-close')), false,
       'modal backdrops sit above the titlebar');
 
-    for (const os of ['macos', 'linux']) {
-      const other = await newPage({ userAgent: USER_AGENTS[os] });
-      await other.goto(`${base}/tests/fixtures/windows-titlebar.html`);
-      await other.getByText('Window content', { exact: true }).waitFor();
-      assert.equal(await other.locator('.window-titlebar').count(), 0, `${os} keeps native decorations`);
-    }
+    const mac = await newPage({ userAgent: USER_AGENTS.macos });
+    await mac.goto(`${base}/tests/fixtures/windows-titlebar.html`);
+    await mac.locator('.window-titlebar').waitFor();
+    assert.equal(await mac.evaluate(() => window.firstRenderedClass), 'immersive-window',
+      'macOS overlay titlebar is present on the first render');
+    assert.equal(await mac.locator('.window-titlebar').evaluate(el => el.getBoundingClientRect().height), 28);
+    assert.equal(await mac.locator('.window-controls').count(), 0, 'macOS keeps its native traffic lights');
+    assert.equal(await mac.locator('.window-titlebar [data-tauri-drag-region]').count(), 1);
+    const config = JSON.parse(await fs.readFile(path.resolve(__dirname, '../src-tauri/tauri.conf.json'), 'utf8'));
+    const mainWindow = config.app.windows.find(window => window.label === 'main');
+    assert.equal(mainWindow.titleBarStyle, 'Overlay', 'macOS draws the frontend titlebar under an overlay title bar');
+    assert.equal(mainWindow.hiddenTitle, true);
+
+    const linux = await newPage({ userAgent: USER_AGENTS.linux });
+    await linux.goto(`${base}/tests/fixtures/windows-titlebar.html`);
+    await linux.getByText('Window content', { exact: true }).waitFor();
+    assert.equal(await linux.locator('.window-titlebar').count(), 0, 'linux keeps native decorations');
+
+    const macPreview = await newPage();
+    await macPreview.goto(`${base}/?mock=running&mockDelay=0&windowPreview=macos`);
+    await macPreview.locator('.window-titlebar').waitFor();
+    const macSidebar = await macPreview.locator('.sidebar').boundingBox();
+    const macTitlebar = await macPreview.locator('.window-titlebar').boundingBox();
+    const macWorkspace = await macPreview.locator('.workspace').boundingBox();
+    assert.deepEqual([macTitlebar.x, macTitlebar.y, macTitlebar.width, macTitlebar.height], [0, 0, 1280, 28],
+      'macOS keeps a full-width title bar like the native one');
+    assert.equal(await macPreview.locator('.window-title').textContent(), 'EasyCLIProxyAPI');
+    assert.equal(macSidebar.y, macTitlebar.height, 'macOS sidebar starts below the title bar');
+    assert.equal(macWorkspace.y, macTitlebar.height, 'macOS workspace starts below the title bar');
+    assert.equal(macSidebar.y + macSidebar.height, 800, 'macOS sidebar reaches the bottom edge');
+    assert.equal(await macPreview.locator('.window-title').evaluate(el => getComputedStyle(el).pointerEvents), 'none',
+      'the title does not block dragging');
+    const macTitle = await macPreview.locator('.window-title').evaluate(el => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const rect = range.getBoundingClientRect();
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    });
+    assert.ok(Math.abs(macTitle.x - 640) <= 1 && Math.abs(macTitle.y - 14) <= 1, 'the title is centered in the title bar');
+    await macPreview.screenshot({ path: 'bin-work/macos-overlay-titlebar.png' });
+    await macPreview.setViewportSize({ width: 640, height: 600 });
+    const macCompact = await macPreview.locator('.window-titlebar').boundingBox();
+    assert.deepEqual([macCompact.x, macCompact.width, macCompact.height], [0, 640, 28], 'compact macOS keeps the full-width title bar');
+    assert.notEqual(await macPreview.locator('.window-titlebar').evaluate(el => getComputedStyle(el).backgroundColor),
+      await macPreview.locator('.sidebar').evaluate(el => getComputedStyle(el).backgroundColor),
+      'compact macOS does not take the Windows sidebar-colored title bar');
     assert.deepEqual(errors, []);
-    console.log('PASS: preview, layout, first render, native IPC, state events, error feedback, modal layering, non-Windows exclusion, themes and compact layout.');
+    console.log('PASS: preview, layout, first render, native IPC, state events, error feedback, modal layering, macOS overlay titlebar, Linux exclusion, themes and compact layout.');
   } finally { await browser?.close(); await server.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
