@@ -3,10 +3,18 @@
   background: transparent !important;
 }
 
-:root[data-window-material] :is(.workspace, .immersive-window .window-titlebar) {
-  background: color-mix(in srgb, var(--theme-faf9f5) 72%, transparent);
+:root[data-window-material] .workspace {
+  background: color-mix(in srgb, var(--theme-faf9f5) var(--theme-window-material-workspace-opacity, 72%), transparent);
 }
 
 :root[data-window-material] .sidebar {
-  background: color-mix(in srgb, var(--sidebar-bg) 40%, transparent);
+  background: color-mix(in srgb, var(--sidebar-bg) var(--theme-window-material-sidebar-opacity, 40%), transparent);
+}
+
+:root[data-window-material] .immersive-window .window-titlebar {
+  background: color-mix(in srgb, var(--theme-faf9f5) var(--theme-window-material-titlebar-opacity, 72%), transparent);
+}
+
+:root[data-window-material] .workspace .content {
+  background: transparent;
 }

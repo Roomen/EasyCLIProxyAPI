@@ -1,4 +1,4 @@
-import { isThemeId, isThemeLabel, themeTokenProperties, type SystemThemes, type ThemeAppearance, type ThemeDefinition, type ThemeLabel, type ThemePreview } from './types';
+import { isThemeId, isThemeLabel, themeOpacityTokenProperties, themeTokenProperties, type SystemThemes, type ThemeAppearance, type ThemeDefinition, type ThemeLabel, type ThemePreview } from './types';
 import { warmSand } from './warmSand';
 import { graphite } from './graphite';
 import { midnight } from './midnight';
@@ -19,7 +19,10 @@ export function normalizeTheme(definition: ThemeDefinition): ThemeDefinition {
   if (!/^#[\da-f]{6}$/i.test(definition.windowBackground)) throw new Error(`Invalid window background: ${definition.id}`);
   if (!definition.tokens || typeof definition.tokens !== 'object') throw new Error(`Invalid theme tokens: ${definition.id}`);
   for (const [key, value] of Object.entries(definition.tokens)) {
-    if (!Object.prototype.hasOwnProperty.call(themeTokenProperties, key) || !/^#(?:[\da-f]{6}|[\da-f]{8})$/i.test(value)) {
+    const valid = typeof value === 'string' && (Object.prototype.hasOwnProperty.call(themeOpacityTokenProperties, key)
+      ? /^(?:\d+(?:\.\d+)?)%$/.test(value) && Number(value.slice(0, -1)) <= 100
+      : /^#(?:[\da-f]{6}|[\da-f]{8})$/i.test(value));
+    if (!Object.prototype.hasOwnProperty.call(themeTokenProperties, key) || !valid) {
       throw new Error(`Invalid theme color: ${definition.id}.${key}`);
     }
   }

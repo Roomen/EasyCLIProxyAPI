@@ -4,7 +4,14 @@ import type { MessageKey } from '../i18n/resources';
 export type ThemeAppearance = 'light' | 'dark';
 export type ThemePreference = string;
 
+export const themeOpacityTokenProperties = {
+  windowMaterialWorkspaceOpacity: ['--theme-window-material-workspace-opacity'],
+  windowMaterialSidebarOpacity: ['--theme-window-material-sidebar-opacity'],
+  windowMaterialTitlebarOpacity: ['--theme-window-material-titlebar-opacity'],
+} as const;
+
 export const themeTokenProperties = {
+  ...themeOpacityTokenProperties,
   workspaceBackground: ['--theme-workspace-background', '--bg-secondary'],
   surface: ['--theme-surface', '--bg-primary', '--bg-card', '--theme-fff', '--theme-ffffff', '--theme-fffdf8'],
   softSurface: [

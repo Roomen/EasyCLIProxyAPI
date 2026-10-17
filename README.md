@@ -164,6 +164,7 @@ Put one theme per `.json` file in the `themes` folder of the application data di
   "description": "Deep teal surfaces with a sea-glass accent",
   "appearance": "dark",
   "windowBackground": "#0E1A1F",
+  "windowMaterial": "translucent",
   "tokens": {
     "workspaceBackground": "#0E1A1F",
     "surface": "#14242B",
@@ -171,7 +172,10 @@ Put one theme per `.json` file in the `themes` folder of the application data di
     "border": "#2A434C",
     "accent": "#6FD3C1",
     "accentContrast": "#0E1A1F",
-    "sidebarBackground": "#0B151A"
+    "sidebarBackground": "#0B151A",
+    "windowMaterialWorkspaceOpacity": "72%",
+    "windowMaterialSidebarOpacity": "40%",
+    "windowMaterialTitlebarOpacity": "72%"
   }
 }
 ```
@@ -180,12 +184,13 @@ Put one theme per `.json` file in the `themes` folder of the application data di
 - `name` (required) and `description`: a string or an object keyed by `en`, `zh-CN`, `zh-TW` and `ja`.
 - `appearance` (required): `light` or `dark`; the theme is listed in that group.
 - `windowBackground` (required): `#RRGGBB`, the native window color shown before the page paints.
-- `tokens` (required, may be empty): colors as `#RRGGBB` or `#RRGGBBAA`. Omitted tokens keep the default light or dark value.
+- `tokens` (required, may be empty): color tokens accept `#RRGGBB` or `#RRGGBBAA`; omitted colors keep the default light or dark value. The opacity tokens below accept percentages.
 - `backdrop`: optional gradient background with the same structure as the built-in Midnight Blue and Sakura Blush themes.
 - `windowMaterial`: `solid` (default) or `translucent`. A translucent theme shows the native window material behind the sidebar and workspace: Liquid Glass on macOS 26 and later, vibrancy on earlier macOS, Mica on Windows 11 and Acrylic on Windows 10 1809 and later. Linux and older Windows versions have no material and render the theme exactly like a solid one, so keep `windowBackground` and the tokens complete. While a material is shown it replaces `backdrop`.
+- Optional opacity tokens in `tokens`: `windowMaterialWorkspaceOpacity` (workspace, default `"72%"`), `windowMaterialSidebarOpacity` (sidebar, default `"40%"`), and `windowMaterialTitlebarOpacity` (title bar, default `"72%"`). Each accepts a percentage string from `"0%"` (fully transparent) to `"100%"` (opaque), including decimals such as `"37.5%"`. These tokens only affect supported systems when `windowMaterial` is `translucent`; the root, body and shell stay transparent to expose the native material. Invalid values skip the file. This is part of the theme, with no separate material setting; built-in themes remain solid.
 - `$schema` is allowed and ignored; any other field makes the file invalid.
 
-Available token keys: `workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`.
+Available token keys: `workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`, `windowMaterialWorkspaceOpacity`, `windowMaterialSidebarOpacity`, `windowMaterialTitlebarOpacity`.
 
 ## Quick Start
 

@@ -158,6 +158,7 @@ Codex 的 **会话管理 → 编辑上下文（实验性）** 仅在点击某个
   "description": "Deep teal surfaces with a sea-glass accent",
   "appearance": "dark",
   "windowBackground": "#0E1A1F",
+  "windowMaterial": "translucent",
   "tokens": {
     "workspaceBackground": "#0E1A1F",
     "surface": "#14242B",
@@ -165,7 +166,10 @@ Codex 的 **会话管理 → 编辑上下文（实验性）** 仅在点击某个
     "border": "#2A434C",
     "accent": "#6FD3C1",
     "accentContrast": "#0E1A1F",
-    "sidebarBackground": "#0B151A"
+    "sidebarBackground": "#0B151A",
+    "windowMaterialWorkspaceOpacity": "72%",
+    "windowMaterialSidebarOpacity": "40%",
+    "windowMaterialTitlebarOpacity": "72%"
   }
 }
 ```
@@ -174,12 +178,13 @@ Codex 的 **会话管理 → 编辑上下文（实验性）** 仅在点击某个
 - `name`（必填）和 `description`：字符串，或以 `en`、`zh-CN`、`zh-TW`、`ja` 为键的对象。
 - `appearance`（必填）：`light` 或 `dark`，决定主题出现在哪个分组。
 - `windowBackground`（必填）：`#RRGGBB`，页面绘制前原生窗口显示的颜色。
-- `tokens`（必填，可为空对象）：颜色取值为 `#RRGGBB` 或 `#RRGGBBAA`，未填写的 token 使用默认亮色或暗色取值。
+- `tokens`（必填，可为空对象）：颜色 token 取值为 `#RRGGBB` 或 `#RRGGBBAA`，未填写的颜色使用默认亮色或暗色取值。下述不透明度 token 使用百分比。
 - `backdrop`：可选的渐变背景，结构与内置的午夜蓝、樱语红粉主题相同。
 - `windowMaterial`：`solid`（默认）或 `translucent`。半透明主题会在侧边栏和工作区后面显示系统原生窗口材质：macOS 26 及以上为液态玻璃，更早的 macOS 为 vibrancy，Windows 11 为 Mica，Windows 10 1809 及以上为 Acrylic。Linux 和更早的 Windows 不支持材质，主题会按不透明主题原样显示，因此 `windowBackground` 和各项 token 仍需填写完整。显示材质时 `backdrop` 渐变不生效。
+- `tokens` 中可选的不透明度键：`windowMaterialWorkspaceOpacity`（工作区，默认 `"72%"`）、`windowMaterialSidebarOpacity`（侧栏，默认 `"40%"`）、`windowMaterialTitlebarOpacity`（标题栏，默认 `"72%"`）。取值为 `"0%"`（完全透明）到 `"100%"`（不透明）的百分比字符串，支持 `"37.5%"` 等小数。仅在系统支持材质且 `windowMaterial` 为 `translucent` 时生效；根节点、body 和外壳保持透明以显示原生材质。非法取值会跳过该文件。材质属于主题配置，没有独立设置项；内置主题仍保持不透明。
 - 允许出现 `$schema`（会被忽略）；其他任何字段都会使文件无效。
 
-可用的 token 键：`workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`。
+可用的 token 键：`workspaceBackground`, `surface`, `softSurface`, `hoverBackground`, `textPrimary`, `textSecondary`, `textTertiary`, `textMuted`, `border`, `borderSubtle`, `borderStrong`, `borderHover`, `panelShadow`, `accent`, `accentStrong`, `accentSoft`, `accentContrast`, `accentShadow`, `primaryButtonBackground`, `primaryButtonHoverBackground`, `primaryButtonText`, `primaryButtonBorder`, `primaryButtonHoverBorder`, `controlActiveBackground`, `controlActiveThumb`, `focusRing`, `sidebarBackground`, `sidebarText`, `sidebarTextStrong`, `sidebarTextMuted`, `sidebarBorder`, `sidebarHover`, `sidebarSelected`, `sidebarSelectedBorder`, `sidebarSelectedShadow`, `popoverBackground`, `overlaySoftSurface`, `overlayHoverBackground`, `scrim`, `controlThumb`, `windowMaterialWorkspaceOpacity`, `windowMaterialSidebarOpacity`, `windowMaterialTitlebarOpacity`。
 
 ## 快速开始
 
